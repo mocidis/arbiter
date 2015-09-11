@@ -1,0 +1,7 @@
+BEGIN riu
+
+REQUEST reg_state_resp {
+    PARAM code int
+    PARAM msg char [50]
+}
+END

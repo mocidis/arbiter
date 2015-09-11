@@ -1,0 +1,8 @@
+BEGIN arbiter
+
+REQUEST reg_state_msg 101 {
+    PARAM code int
+	PARAM username char [10]
+    PARAM type char [5]
+}
+END
