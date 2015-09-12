@@ -24,7 +24,7 @@ void *oiu_server_proc(void *param) {
         if (udata->o_head != NULL){
             DL_FOREACH_SAFE(udata->o_head, o_node, o_temp) {
                 areq.msg_id = OIUC_GB;
-                if (o_node->is_online == 1 && (timer - o_node->recv_time ) < 15) //Need more condition
+                if (o_node->is_online == 1 && (timer - o_node->recv_time ) < 15)
                     areq.oiuc_gb.is_alive = 1;
                 else
                     areq.oiuc_gb.is_alive = 0;
