@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean gen-a gen-o
 
 USERVER_DIR:=../userver
 PROTOCOLS_DIR:=../protocols
@@ -11,7 +11,7 @@ GEN_S_SRCS:=arbiter-server.c
 GEN_C_SRCS:=oiu-client.c
 
 ARBITER_DIR:=.
-ARBITER_SRCS:=arbiter.c arbiter-func.c
+ARBITER_SRCS:=arbiter-func.c arbiter.c
 
 LIBUT_DIR:=../libut
 
@@ -21,7 +21,7 @@ NODES_SRCS:=ics-node.c
 O_DIR:=../ansi-opool
 O_SRCS:=object-pool.c
 
-CFLAGS:=-std=c99 -I$(ARBITER_DIR)/include -I$(COMMON_DIR)/include -I$(USERVER_DIR)/include 
+CFLAGS:=-std=c99 -I$(ARBITER_DIR)/include -I$(COMMON_DIR)/include -I$(USERVER_DIR)/include  -Wall
 CFLAGS += -I../json-c/output/include/json-c
 CFLAGS += -I$(NODES_DIR)/include -I$(LIBUT_DIR)/include
 CFLAGS += -I$(GEN_DIR) -I$(O_DIR)/include

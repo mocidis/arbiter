@@ -12,8 +12,7 @@
 void *oiu_server_proc(void *param) {
     arbiter_server_t *aserver = (arbiter_server_t *)param;
     arbiter_data_t *udata = (arbiter_data_t *)aserver->user_data;
-    oiu_t *oiu, *o_node, *o_temp;
-    int n;
+    oiu_t *o_node, *o_temp;
     time_t timer;
 
     oiu_client_t *oclient = udata->oclient;

@@ -34,12 +34,9 @@ static int cmp_id(oiu_t *a, oiu_t *b) {
 
 static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     arbiter_data_t *udata = (arbiter_data_t *)aserver->user_data;
-    oiu_t *oiu, *o_node, *o_temp;
+    oiu_t *oiu, *o_node;
     int n;
     time_t timer;
-    
-    oiu_client_t *oclient = udata->oclient;
-    oiu_request_t areq;
 
     arbiter_new_oiu(&oiu);
 
