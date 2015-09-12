@@ -8,6 +8,7 @@
 #include "utlist.h"
 
 #include "arbiter-data.h"
+#include "arbiter-func.h"
 #include "object-pool.h"
 
 #include "arbiter-server.h"
@@ -33,7 +34,7 @@ static int cmp_id(oiu_t *a, oiu_t *b) {
 
 static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     arbiter_data_t *udata = (arbiter_data_t *)aserver->user_data;
-    oiu_t *oiu, *o_node;
+    oiu_t *oiu, *o_node, *o_temp;
     int n;
     time_t timer;
     
@@ -43,19 +44,20 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     arbiter_new_oiu(&oiu);
 
     switch(request->msg_id) {
-        case REG_STATE_MSG:
-            n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->reg_state_msg.username);
+        case ABT_UP:
+            n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
             oiu->id[n] = '\0';
 
-            if (request->reg_state_msg.code == 1)
+            if (request->abt_up.code == 1)
                 oiu->is_online  = 1;
             else {
-                time(&timer);
-                oiu->downtime = timer;
                 oiu->is_online = 0;
             }
 
-            if (strcmp(request->reg_state_msg.type, "OIU") == 0)
+            time(&timer);
+            oiu->recv_time = timer;
+
+            if (strcmp(request->abt_up.type, "OIU") == 0)
                 oiu->type = OIU;
             else
                 oiu->type = RIU;
@@ -68,13 +70,22 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
             else {
                 DL_REPLACE_ELEM(udata->o_head, o_node, oiu);
             }
-
-            areq.msg_id = REG_STATE_RESP;
-            areq.reg_state_resp.code = 200;
-            strncpy(areq.reg_state_resp.msg, "OK", sizeof(areq.reg_state_resp.msg));
-            oiu_client_send(oclient, &areq);
+            //SAVE TO LIST DONE
+            // NOW SEND THE LIST TO OIUC BY MULTICAST
+            // (MOVED INTO ARBITER-FUNC.C)
+/*
+            DL_FOREACH_SAFE(udata->o_head, o_node, o_temp) {
+                areq.msg_id = OIUC_GB;
+                if (request->abt_up.code == 1) //Need more condition
+                    areq.oiuc_gb.is_alive = 1;
+                else
+                    areq.oiuc_gb.is_alive = 0;
+                strncpy(areq.oiuc_gb.id, request->abt_up.username, sizeof(areq.oiuc_gb.id));
+                oiu_client_send(oclient, &areq);
+            }       */
             break;
         default:
+            printf("Unknow request. Exit now\n");
             exit(-1);
     }
 }
@@ -97,7 +108,7 @@ int main(int argc, char *argv[]) {
 	oiu_t *o_node, *o_temp;
 
 	char option[10];
-	double downtime;
+	double recv_time;
 	time_t timer;
 
 
@@ -108,7 +119,8 @@ int main(int argc, char *argv[]) {
 	}
 
     //RESPONE
-    oiu_client_open(&oclient, argv[1]);   
+    oiu_client_open(&oclient, argv[1]);
+    arbiter_auto_send(&aserver);
 
     //LISTEN
 	aserver.on_request_f = &on_request;
@@ -131,12 +143,12 @@ int main(int argc, char *argv[]) {
 			case 'm':
 				DL_FOREACH(u_data->o_head, o_node) {
 					time(&timer);
-					downtime = difftime(timer, o_node->downtime);
+					recv_time = difftime(timer, o_node->recv_time);
 					printf("Node: type =%s, id=%s, is_online=%d ", DEVICE_TYPE[o_node->type], o_node->id, o_node->is_online);
                     if (o_node->is_online == 1)
                         printf("(On)\n");
                     else
-                        printf("(Downtime = %.f second)\n", (o_node->is_online == 0 ? downtime:0) );
+                        printf("(Downtime = %.f second)\n", (o_node->is_online == 0 ? recv_time:0) );
                 }
                     break;
 			case 'q':
