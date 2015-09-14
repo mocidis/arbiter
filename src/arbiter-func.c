@@ -14,6 +14,7 @@ void *oiu_server_proc(void *param) {
     arbiter_data_t *udata = (arbiter_data_t *)aserver->user_data;
     oiu_t *o_node, *o_temp;
     time_t timer;
+    struct tm * timeinfo;
 
     oiu_client_t *oclient = udata->oclient;
     oiu_request_t areq;
@@ -24,11 +25,18 @@ void *oiu_server_proc(void *param) {
         if (udata->o_head != NULL){
             DL_FOREACH_SAFE(udata->o_head, o_node, o_temp) {
                 areq.msg_id = OIUC_GB;
+
+                strncpy(areq.oiuc_gb.type, "OIUC", sizeof(areq.oiuc_gb.type));
+
                 if (o_node->is_online == 1 && (timer - o_node->recv_time ) < 15)
-                    areq.oiuc_gb.is_alive = 1;
+                    areq.oiuc_gb.is_online = 1;
                 else
-                    areq.oiuc_gb.is_alive = 0;
+                    areq.oiuc_gb.is_online = 0;
                 strncpy(areq.oiuc_gb.id, o_node->id, sizeof(areq.oiuc_gb.id));
+
+                timeinfo = localtime (&o_node->recv_time);
+                strftime (areq.oiuc_gb.timestamp, 20,"%H:%M:%S", timeinfo);                           
+
                 oiu_client_send(oclient, &areq);
             }
         }

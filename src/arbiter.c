@@ -68,18 +68,8 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 DL_REPLACE_ELEM(udata->o_head, o_node, oiu);
             }
             //SAVE TO LIST DONE
-            // NOW SEND THE LIST TO OIUC BY MULTICAST
+            // NOW SEND THE LIST TO OIUC ON MULTICAST
             // (MOVED INTO ARBITER-FUNC.C)
-/*
-            DL_FOREACH_SAFE(udata->o_head, o_node, o_temp) {
-                areq.msg_id = OIUC_GB;
-                if (request->abt_up.code == 1) //Need more condition
-                    areq.oiuc_gb.is_alive = 1;
-                else
-                    areq.oiuc_gb.is_alive = 0;
-                strncpy(areq.oiuc_gb.id, request->abt_up.username, sizeof(areq.oiuc_gb.id));
-                oiu_client_send(oclient, &areq);
-            }       */
             break;
         default:
             printf("Unknow request. Exit now\n");
@@ -117,7 +107,6 @@ int main(int argc, char *argv[]) {
 
     //RESPONE
     oiu_client_open(&oclient, argv[1]);
-    arbiter_auto_send(&aserver);
 
     //LISTEN
 	aserver.on_request_f = &on_request;
@@ -125,6 +114,8 @@ int main(int argc, char *argv[]) {
 
 	arbiter_server_init(&aserver, argv[2]);
 	
+    arbiter_auto_send(&aserver);//Check list then send list on multicast
+
 	arbiter_data_t *u_data = (arbiter_data_t *)aserver.user_data;
     u_data->oclient = &oclient;
 
@@ -143,7 +134,7 @@ int main(int argc, char *argv[]) {
 					recv_time = difftime(timer, o_node->recv_time);
 					printf("Node: type =%s, id=%s, is_online=%d ", DEVICE_TYPE[o_node->type], o_node->id, o_node->is_online);
                     if (o_node->is_online == 1)
-                        printf("(On)\n");
+                        printf("(Online)\n");
                     else
                         printf("(Downtime = %.f second)\n", (o_node->is_online == 0 ? recv_time:0) );
                 }
