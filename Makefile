@@ -21,7 +21,7 @@ NODES_SRCS:=ics-node.c
 O_DIR:=../ansi-opool
 O_SRCS:=object-pool.c
 
-CFLAGS:=-std=c99 -I$(ARBITER_DIR)/include -I$(COMMON_DIR)/include -I$(USERVER_DIR)/include  -Wall
+CFLAGS:=-std=c99 -fms-extensions -Wall -I$(ARBITER_DIR)/include -I$(COMMON_DIR)/include -I$(USERVER_DIR)/include 
 CFLAGS += -I../json-c/output/include/json-c
 CFLAGS += -I$(NODES_DIR)/include -I$(LIBUT_DIR)/include
 CFLAGS += -I$(GEN_DIR) -I$(O_DIR)/include
