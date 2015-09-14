@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     //LISTEN
 	aserver.on_request_f = &on_request;
 	aserver.on_init_done_f = &on_init_done;
-
+	aserver.on_open_socket_f = NULL;
 	arbiter_server_init(&aserver, argv[2]);
 	
     arbiter_auto_send(&aserver);//Check list then send list on multicast
