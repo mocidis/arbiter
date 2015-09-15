@@ -28,44 +28,83 @@ void arbiter_delete_oiu(oiu_t *del) {
     if( del != NULL) free(del);
 }
 
-static int cmp_id(oiu_t *a, oiu_t *b) {
+static int cmp_id_oiu(oiu_t *a, oiu_t *b) {
+    return strcmp(a->id, b->id);
+}
+
+void arbiter_new_riu(riu_t **new) {
+    *new = malloc(sizeof(riu_t));
+    EXIT_IF_TRUE(*new == NULL, "Cannot alloc memory\n");
+    return;
+}
+void arbiter_delete_riu(riu_t *del) {
+    if( del != NULL) free(del);
+}
+
+static int cmp_id_riu(riu_t *a, riu_t *b) {
     return strcmp(a->id, b->id);
 }
 
 static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     arbiter_data_t *udata = (arbiter_data_t *)aserver->user_data;
     oiu_t *oiu, *o_node;
+    riu_t *riu, *r_node;
+
     int n;
     time_t timer;
 
     arbiter_new_oiu(&oiu);
+    arbiter_new_riu(&riu);
 
     switch(request->msg_id) {
         case ABT_UP:
-            n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
-            oiu->id[n] = '\0';
-
-            if (request->abt_up.code == 1)
-                oiu->is_online  = 1;
-            else {
-                oiu->is_online = 0;
-            }
-
-            time(&timer);
-            oiu->recv_time = timer;
-
-            if (strcmp(request->abt_up.type, "OIU") == 0)
+            if (strcmp(request->abt_up.type, "OIU") == 0) {
                 oiu->type = OIU;
-            else
-                oiu->type = RIU;
 
-            LL_SEARCH(udata->o_head, o_node, oiu, cmp_id);
+                n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
+                oiu->id[n] = '\0';
 
-            if (o_node == NULL){
-                oius_append( &udata->o_head, oiu);
+                if (request->abt_up.code == 1)
+                    oiu->is_online  = 1;
+                else {
+                    oiu->is_online = 0;
+                }
+
+                time(&timer);
+                oiu->recv_time = timer;
+
+                LL_SEARCH(udata->o_head, o_node, oiu, cmp_id_oiu);
+
+                if (o_node == NULL){
+                    oius_append( &udata->o_head, oiu);
+                }
+                else {
+                    DL_REPLACE_ELEM(udata->o_head, o_node, oiu);
+                }
             }
             else {
-                DL_REPLACE_ELEM(udata->o_head, o_node, oiu);
+                riu->type = RIU;
+                strcpy(riu->id, request->abt_up.username);
+                if (request->abt_up.code == 1)
+                    riu->is_online  = 1;
+                else {
+                    riu->is_online = 0;
+                }
+
+                time(&timer);
+                riu->recv_time = timer;
+
+                riu->n_ports = request->abt_up.n_ports;            
+
+                LL_SEARCH(udata->r_head, r_node, riu, cmp_id_riu);
+
+                if (r_node == NULL){
+                    rius_append( &udata->r_head, riu);
+                }
+                else {
+                    DL_REPLACE_ELEM(udata->r_head, r_node, riu);
+                }
+
             }
             //SAVE TO LIST DONE
             // NOW SEND THE LIST TO OIUC ON MULTICAST
@@ -100,11 +139,12 @@ int main(int argc, char *argv[]) {
 
 
 	int f_quit;
-
+/*
 	if( argc < 3 ) {
 		usage(argv[0]);
 	}
-
+*/
+#if 0
     //RESPONE
     oiu_client_open(&oclient, argv[1]);
 
@@ -121,6 +161,29 @@ int main(int argc, char *argv[]) {
 
 	arbiter_server_start(&aserver);
     
+#endif
+
+#if 1
+    char send[50] = "udp:239.0.0.1:1234";
+    char recv[50] = "udp:0.0.0.0:4321";
+    //RESPONE
+    oiu_client_open(&oclient, send);
+
+    //LISTEN
+	aserver.on_request_f = &on_request;
+	aserver.on_init_done_f = &on_init_done;
+	aserver.on_open_socket_f = NULL;
+	arbiter_server_init(&aserver, recv);
+	
+    arbiter_auto_send(&aserver);//Check list then send list on multicast
+
+	arbiter_data_t *u_data = (arbiter_data_t *)aserver.user_data;
+    u_data->oclient = &oclient;
+
+	arbiter_server_start(&aserver);
+    
+#endif
+
     //===============================================================//
 	f_quit = 0;
 	while(!f_quit) {
