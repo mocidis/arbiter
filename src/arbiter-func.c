@@ -56,6 +56,10 @@ void *oiu_server_proc(void *param) {
 
                 areq.oiuc_gb.n_ports = r_node->n_ports;
 
+                areq.oiuc_gb.frequence = r_node->frequence;
+            
+                strncpy(areq.oiuc_gb.location, r_node->location, sizeof(areq.oiuc_gb.location));
+
                 timeinfo = localtime (&r_node->recv_time);
                 strftime (areq.oiuc_gb.timestamp, 20,"%H:%M:%S", timeinfo);                           
 

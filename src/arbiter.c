@@ -64,7 +64,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
                 oiu->id[n] = '\0';
 
-                if (request->abt_up.code == 1)
+                if (request->abt_up.is_online == 1)
                     oiu->is_online  = 1;
                 else {
                     oiu->is_online = 0;
@@ -85,7 +85,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
             else {
                 riu->type = RIU;
                 strcpy(riu->id, request->abt_up.username);
-                if (request->abt_up.code == 1)
+                if (request->abt_up.is_online == 1)
                     riu->is_online  = 1;
                 else {
                     riu->is_online = 0;
@@ -95,6 +95,10 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 riu->recv_time = timer;
 
                 riu->n_ports = request->abt_up.n_ports;            
+
+                riu->frequence = request->abt_up.frequence;
+
+                strncpy(riu->location, request->abt_up.location, sizeof(riu->location));
 
                 LL_SEARCH(udata->r_head, r_node, riu, cmp_id_riu);
 
@@ -139,12 +143,12 @@ int main(int argc, char *argv[]) {
 
 
 	int f_quit;
-/*
+
+#if 0
 	if( argc < 3 ) {
 		usage(argv[0]);
 	}
-*/
-#if 0
+
     //RESPONE
     oiu_client_open(&oclient, argv[1]);
 
