@@ -53,8 +53,7 @@ void *oiu_server_proc(void *param) {
                 else
                     areq.oiuc_gb.is_online = 0;
                 strncpy(areq.oiuc_gb.id, r_node->id, sizeof(areq.oiuc_gb.id));
-
-                areq.oiuc_gb.n_ports = r_node->n_ports;
+                strncpy(areq.oiuc_gb.ports_status, r_node->ports_status, sizeof(areq.oiuc_gb.ports_status));
 
                 areq.oiuc_gb.frequence = r_node->frequence;
             
