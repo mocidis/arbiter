@@ -94,11 +94,10 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 time(&timer);
                 riu->recv_time = timer;
 
-                riu->n_ports = request->abt_up.n_ports;            
-
                 riu->frequence = request->abt_up.frequence;
 
                 strncpy(riu->location, request->abt_up.location, sizeof(riu->location));
+                strncpy(riu->ports_status, request->abt_up.ports_status, sizeof(riu->ports_status));
 
                 LL_SEARCH(udata->r_head, r_node, riu, cmp_id_riu);
 
