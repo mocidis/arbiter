@@ -167,8 +167,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if 1
-    char send[50] = "udp:239.0.0.1:1234";
-    char recv[50] = "udp:0.0.0.0:4321";
+    char send[50] = "udp:239.0.0.1:12345";
+    char recv[50] = "udp:0.0.0.0:54321";
     //RESPONE
     oiu_client_open(&oclient, send);
 
