@@ -47,7 +47,7 @@ void *oiu_server_proc(void *param) {
                 areq.msg_id = OIUC_GB;
 
                 strncpy(areq.oiuc_gb.type, "RIUC", sizeof(areq.oiuc_gb.type));
-
+                
                 if (r_node->is_online == 1 && (timer - r_node->recv_time ) < 6)
                     areq.oiuc_gb.is_online = 1;
                 else
