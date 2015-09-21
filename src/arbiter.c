@@ -163,32 +163,9 @@ int main(int argc, char *argv[]) {
 
 	int f_quit;
 
-#if 0
 	if( argc < 3 ) {
 		usage(argv[0]);
 	}
-
-    //RESPONE
-    oiu_client_open(&oclient, argv[1]);
-
-    //LISTEN
-	aserver.on_request_f = &on_request;
-	aserver.on_init_done_f = &on_init_done;
-	aserver.on_open_socket_f = NULL;
-	arbiter_server_init(&aserver, argv[2]);
-	
-    arbiter_auto_send(&aserver);//Check list then send list on multicast
-
-	arbiter_data_t *u_data = (arbiter_data_t *)aserver.user_data;
-    u_data->oclient = &oclient;
-
-	arbiter_server_start(&aserver);
-    
-#endif
-
-#if 1
-    char send[] = "udp:239.0.0.1:1234";
-    char recv[] = "udp:0.0.0.0:4321";
 
     char send_riuc1[] = "udp:239.0.0.1:11111";
     char send_riuc2[] = "udp:239.0.0.1:22222";
@@ -196,7 +173,7 @@ int main(int argc, char *argv[]) {
     char send_riuc4[] = "udp:239.0.0.1:44444";
 
     //RESPONE
-    oiu_client_open(&oclient, send);
+    oiu_client_open(&oclient, argv[1]);
     riu_client_open(&rclient1, send_riuc1);
     riu_client_open(&rclient2, send_riuc2);
     riu_client_open(&rclient3, send_riuc3);
@@ -206,7 +183,7 @@ int main(int argc, char *argv[]) {
     aserver.on_request_f = &on_request;
 	aserver.on_init_done_f = &on_init_done;
 	aserver.on_open_socket_f = NULL;
-	arbiter_server_init(&aserver, recv);
+	arbiter_server_init(&aserver, argv[2]);
 	
     arbiter_auto_send(&aserver);//Check list then send list on multicast
 
@@ -219,8 +196,6 @@ int main(int argc, char *argv[]) {
 
 	arbiter_server_start(&aserver);
     
-#endif
-
     //===============================================================//
 	f_quit = 0;
 	while(!f_quit) {
