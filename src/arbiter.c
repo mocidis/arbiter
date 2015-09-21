@@ -13,6 +13,7 @@
 
 #include "arbiter-server.h"
 #include "oiu-client.h"
+#include "riu-client.h"
 
 void usage(char *app) {
     printf("Usage: %s <answer-conn-string> <listen-conn-string>\n", app);
@@ -55,6 +56,8 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
 
     arbiter_new_oiu(&oiu);
     arbiter_new_riu(&riu);
+
+    riu_request_t req;
 
     switch(request->msg_id) {
         case ABT_UP:
@@ -113,6 +116,18 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
             // NOW SEND THE LIST TO OIUC ON MULTICAST
             // (MOVED INTO ARBITER-FUNC.C)
             break;
+        case ABT_PTT:
+            req.msg_id = RIUC_PTT;
+            strncpy(req.riuc_ptt.cmd, request->abt_ptt.cmd, sizeof(req.riuc_ptt.cmd));
+            if (strstr(request->abt_ptt.list, "RIUC1"))
+                printf("a = %d\n",riu_client_send(udata->rclient1,&req));
+            else if (strstr(request->abt_ptt.list, "RIUC2"))
+                riu_client_send(udata->rclient2,&req);
+            else if (strstr(request->abt_ptt.list, "RIUC3"))
+                riu_client_send(udata->rclient3,&req);
+            else if (strstr(request->abt_ptt.list, "RIUC4"))
+                riu_client_send(udata->rclient4,&req);
+            break;
         default:
             printf("Unknow request. Exit now\n");
             exit(-1);
@@ -134,9 +149,14 @@ static void on_init_done(arbiter_server_t *aserver) {
 int main(int argc, char *argv[]) {
 	arbiter_server_t aserver;
     oiu_client_t oclient;
-	oiu_t *o_node, *o_temp;
+    riu_client_t rclient1;
+    riu_client_t rclient2;
+    riu_client_t rclient3;
+    riu_client_t rclient4;
 
-	char option[10];
+    oiu_t *o_node, *o_temp;
+
+    char option[10];
 	double recv_time;
 	time_t timer;
 
@@ -167,13 +187,23 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if 1
-    char send[50] = "udp:239.0.0.1:1234";
-    char recv[50] = "udp:0.0.0.0:4321";
+    char send[] = "udp:239.0.0.1:1234";
+    char recv[] = "udp:0.0.0.0:4321";
+
+    char send_riuc1[] = "udp:239.0.0.1:11111";
+    char send_riuc2[] = "udp:239.0.0.1:22222";
+    char send_riuc3[] = "udp:239.0.0.1:33333";
+    char send_riuc4[] = "udp:239.0.0.1:44444";
+
     //RESPONE
     oiu_client_open(&oclient, send);
+    riu_client_open(&rclient1, send_riuc1);
+    riu_client_open(&rclient2, send_riuc2);
+    riu_client_open(&rclient3, send_riuc3);
+    riu_client_open(&rclient4, send_riuc4);
 
     //LISTEN
-	aserver.on_request_f = &on_request;
+    aserver.on_request_f = &on_request;
 	aserver.on_init_done_f = &on_init_done;
 	aserver.on_open_socket_f = NULL;
 	arbiter_server_init(&aserver, recv);
@@ -182,6 +212,10 @@ int main(int argc, char *argv[]) {
 
 	arbiter_data_t *u_data = (arbiter_data_t *)aserver.user_data;
     u_data->oclient = &oclient;
+    u_data->rclient1 = &rclient1;
+    u_data->rclient2 = &rclient2;
+    u_data->rclient3 = &rclient3;
+    u_data->rclient4 = &rclient4;
 
 	arbiter_server_start(&aserver);
     

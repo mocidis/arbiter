@@ -7,8 +7,9 @@ COMMON_DIR:=../common
 COMMON_SRCS:=ansi-utils.c
 
 GEN_DIR:=./gen
-GEN_S_SRCS:=arbiter-server.c
-GEN_C_SRCS:=oiu-client.c
+GEN_A_SRCS:=arbiter-server.c
+GEN_O_SRCS:=oiu-client.c
+GEN_R_SRCS:=riu-client.c
 
 ARBITER_DIR:=.
 ARBITER_SRCS:=arbiter-func.c arbiter.c
@@ -33,8 +34,9 @@ ARBITER_APP:=arbiter
 
 A_PROTOCOL:=arbiter_proto.u
 O_PROTOCOL:=oiu_proto.u
+R_PROTOCOL:=riu_proto.u
 
-all: gen-a gen-o $(ARBITER_APP)
+all: gen-a gen-o gen-r $(ARBITER_APP)
 
 gen-a: $(PROTOCOLS_DIR)/$(A_PROTOCOL)
 	mkdir -p gen
@@ -44,16 +46,23 @@ gen-o: $(PROTOCOLS_DIR)/$(O_PROTOCOL)
 	mkdir -p gen
 	awk -f $(USERVER_DIR)/gen-tools/gen.awk $(PROTOCOLS_DIR)/$(O_PROTOCOL)
 
-$(ARBITER_APP): $(COMMON_SRCS:.c=.o) $(GEN_S_SRCS:.c=.o) $(GEN_C_SRCS:.c=.o) $(ARBITER_SRCS:.c=.o) $(NODES_SRCS:.c=.o) $(O_SRCS:.c=.o) 
+gen-r: $(PROTOCOLS_DIR)/$(R_PROTOCOL)
+	mkdir -p gen
+	awk -f $(USERVER_DIR)/gen-tools/gen.awk $(PROTOCOLS_DIR)/$(R_PROTOCOL)
+
+$(ARBITER_APP): $(COMMON_SRCS:.c=.o) $(GEN_A_SRCS:.c=.o) $(GEN_O_SRCS:.c=.o) $(GEN_R_SRCS:.c=.o) $(ARBITER_SRCS:.c=.o) $(NODES_SRCS:.c=.o) $(O_SRCS:.c=.o) 
 	gcc -o $@ $^ $(LIBS)
 
 $(COMMON_SRCS:.c=.o): %.o: $(COMMON_DIR)/src/%.c
 	gcc -o $@ -c $< $(CFLAGS)
 
-$(GEN_S_SRCS:.c=.o): %.o: $(GEN_DIR)/%.c
+$(GEN_A_SRCS:.c=.o): %.o: $(GEN_DIR)/%.c
 	gcc -o $@ -c $< $(CFLAGS)
 
-$(GEN_C_SRCS:.c=.o): %.o: $(GEN_DIR)/%.c
+$(GEN_O_SRCS:.c=.o): %.o: $(GEN_DIR)/%.c
+	gcc -o $@ -c $< $(CFLAGS)
+
+$(GEN_R_SRCS:.c=.o): %.o: $(GEN_DIR)/%.c
 	gcc -o $@ -c $< $(CFLAGS)
 
 $(ARBITER_SRCS:.c=.o): %.o: $(ARBITER_DIR)/src/%.c
