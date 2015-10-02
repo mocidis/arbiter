@@ -66,6 +66,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
 
                 n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
                 oiu->id[n] = '\0';
+                strncpy(oiu->des, request->abt_up.des, sizeof(oiu->des));
 
                 if (request->abt_up.is_online == 1)
                     oiu->is_online  = 1;
@@ -101,6 +102,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
 
                 strncpy(riu->location, request->abt_up.location, sizeof(riu->location));
                 strncpy(riu->ports_status, request->abt_up.ports_status, sizeof(riu->ports_status));
+                strncpy(riu->des, request->abt_up.des, sizeof(riu->des));
 
                 LL_SEARCH(udata->r_head, r_node, riu, cmp_id_riu);
 

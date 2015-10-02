@@ -29,6 +29,7 @@ void *oiu_server_proc(void *param) {
                 areq.msg_id = OIUC_GB;
 
                 strncpy(areq.oiuc_gb.type, "OIUC", sizeof(areq.oiuc_gb.type));
+                strncpy(areq.oiuc_gb.des, o_node->des, sizeof(areq.oiuc_gb.des));
 
                 if (o_node->is_online == 1 && (timer - o_node->recv_time ) < 15)
                     areq.oiuc_gb.is_online = 1;
@@ -54,7 +55,8 @@ void *oiu_server_proc(void *param) {
                     areq.oiuc_gb.is_online = 0;
                 strncpy(areq.oiuc_gb.id, r_node->id, sizeof(areq.oiuc_gb.id));
                 strncpy(areq.oiuc_gb.ports_status, r_node->ports_status, sizeof(areq.oiuc_gb.ports_status));
-
+                strncpy(areq.oiuc_gb.des, r_node->des, sizeof(areq.oiuc_gb.des));
+               
                 areq.oiuc_gb.frequence = r_node->frequence;
             
                 strncpy(areq.oiuc_gb.location, r_node->location, sizeof(areq.oiuc_gb.location));
