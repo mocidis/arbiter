@@ -5,14 +5,19 @@
 #include "oiu-client.h"
 #include "riu-client.h"
 
+#define MAX_DEVICE 20
+
+typedef struct rclient_data_s{
+    riu_client_t *rclient;
+    char username[10]; 
+    int is_used;
+}rclient_data_t;
+
 typedef struct {
 	oiu_t *o_head;
 	riu_t *r_head;
     oiu_client_t *oclient;
-    riu_client_t *rclient1;
-    riu_client_t *rclient2;
-    riu_client_t *rclient3;
-    riu_client_t *rclient4;
+    rclient_data_t *rclient_data[MAX_DEVICE];
 } arbiter_data_t;
 
 #endif

@@ -15,17 +15,17 @@
 #include "oiu-client.h"
 #include "riu-client.h"
 
-void usage(char *app) {
+static void usage(char *app) {
     printf("Usage: %s <answer-conn-string> <listen-conn-string>\n", app);
     exit(-1);
 }
 
-void arbiter_new_oiu(oiu_t **new) {
+static void arbiter_new_oiu(oiu_t **new) {
     *new = malloc(sizeof(oiu_t));
     EXIT_IF_TRUE(*new == NULL, "Cannot alloc memory\n");
     return;
 }
-void arbiter_delete_oiu(oiu_t *del) {
+static void arbiter_delete_oiu(oiu_t *del) {
     if( del != NULL) free(del);
 }
 
@@ -33,12 +33,12 @@ static int cmp_id_oiu(oiu_t *a, oiu_t *b) {
     return strcmp(a->id, b->id);
 }
 
-void arbiter_new_riu(riu_t **new) {
+static void arbiter_new_riu(riu_t **new) {
     *new = malloc(sizeof(riu_t));
     EXIT_IF_TRUE(*new == NULL, "Cannot alloc memory\n");
     return;
 }
-void arbiter_delete_riu(riu_t *del) {
+static void arbiter_delete_riu(riu_t *del) {
     if( del != NULL) free(del);
 }
 
@@ -51,8 +51,9 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     oiu_t *oiu, *o_node;
     riu_t *riu, *r_node;
 
-    int n;
+    int i, n;
     time_t timer;
+    char ip_addr[] = "udp:";
 
     arbiter_new_oiu(&oiu);
     arbiter_new_riu(&riu);
@@ -112,7 +113,17 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 else {
                     DL_REPLACE_ELEM(udata->r_head, r_node, riu);
                 }
-
+                /////////////
+                for (i = 0; i < MAX_DEVICE; i++ ) 
+                    if (udata->rclient_data[i]->is_used == 0) {
+                        strncpy(udata->rclient_data[0]->username, request->abt_up.username, sizeof(udata->rclient_data[0]->username));
+                        strcat(ip_addr,request->abt_up.ip_addr);
+                        riu_client_open(udata->rclient_data[0]->rclient, ip_addr);
+                        udata->rclient_data[0]->is_used = 1;
+                        break;
+                    }
+                    if (0 == strcmp(udata->rclient_data[i]->username, request->abt_up.username))
+                        break;
             }
             //SAVE TO LIST DONE
             // NOW SEND THE LIST TO OIUC ON MULTICAST
@@ -120,15 +131,24 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
             break;
         case ABT_PTT:
             req.msg_id = RIUC_PTT;
-            strncpy(req.riuc_ptt.cmd, request->abt_ptt.cmd, sizeof(req.riuc_ptt.cmd));
-            if (strstr(request->abt_ptt.list, "RIUC1"))
-                printf("a = %d\n",riu_client_send(udata->rclient1,&req));
-            else if (strstr(request->abt_ptt.list, "RIUC2"))
-                riu_client_send(udata->rclient2,&req);
-            else if (strstr(request->abt_ptt.list, "RIUC3"))
-                riu_client_send(udata->rclient3,&req);
-            else if (strstr(request->abt_ptt.list, "RIUC4"))
-                riu_client_send(udata->rclient4,&req);
+            strncpy(req.riuc_ptt.cmd_ptt, request->abt_ptt.cmd_ptt, sizeof(req.riuc_ptt.cmd_ptt));
+            char *list = strdup(request->abt_ptt.list);
+            char *device, *port;
+            while (list != NULL) {
+                device = strsep(&list, ":");
+                port = strchr(device, '_');
+                *port='\0';
+                port++;
+               // puts(device);
+               // puts(port);;
+                strncpy(req.riuc_ptt.port_ptt, port, sizeof(req.riuc_ptt.port_ptt));
+                for (i = 0; i < MAX_DEVICE; i++) {
+                    //printf("username = %s, id = %d\n", udata->rclient_data[i]->username, i);
+                    if (0 == strcmp(udata->rclient_data[i]->username, device)) {
+                        riu_client_send(udata->rclient_data[i]->rclient, &req);
+                    }
+                }
+            }
             break;
         default:
             printf("Unknow request. Exit now\n");
@@ -137,6 +157,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
 }
 
 static void on_init_done(arbiter_server_t *aserver) {
+    int i;
     arbiter_data_t *adata = malloc(sizeof(arbiter_data_t));
 
     adata->o_head = malloc(sizeof(oiu_t));
@@ -146,17 +167,19 @@ static void on_init_done(arbiter_server_t *aserver) {
     rius_init(&adata->r_head);
 
     aserver->user_data =  adata;
+
+    for (i = 0; i < MAX_DEVICE; i++) {
+        adata->rclient_data[i] = malloc(sizeof(rclient_data_t));
+        adata->rclient_data[i]->rclient = malloc(sizeof(riu_client_t));
+    }
 }
 
 int main(int argc, char *argv[]) {
 	arbiter_server_t aserver;
     oiu_client_t oclient;
-    riu_client_t rclient1;
-    riu_client_t rclient2;
-    riu_client_t rclient3;
-    riu_client_t rclient4;
 
     oiu_t *o_node, *o_temp;
+    riu_t *r_node, *r_temp;
 
     char option[10];
 	double recv_time;
@@ -169,17 +192,8 @@ int main(int argc, char *argv[]) {
 		usage(argv[0]);
 	}
 
-    char send_riuc1[] = "udp:239.0.0.1:11111";
-    char send_riuc2[] = "udp:239.0.0.1:22222";
-    char send_riuc3[] = "udp:239.0.0.1:33333";
-    char send_riuc4[] = "udp:239.0.0.1:44444";
-
     //RESPONE
     oiu_client_open(&oclient, argv[1]);
-    riu_client_open(&rclient1, send_riuc1);
-    riu_client_open(&rclient2, send_riuc2);
-    riu_client_open(&rclient3, send_riuc3);
-    riu_client_open(&rclient4, send_riuc4);
 
     //LISTEN
     aserver.on_request_f = &on_request;
@@ -191,10 +205,6 @@ int main(int argc, char *argv[]) {
 
 	arbiter_data_t *u_data = (arbiter_data_t *)aserver.user_data;
     u_data->oclient = &oclient;
-    u_data->rclient1 = &rclient1;
-    u_data->rclient2 = &rclient2;
-    u_data->rclient3 = &rclient3;
-    u_data->rclient4 = &rclient4;
 
 	arbiter_server_start(&aserver);
     
@@ -228,6 +238,12 @@ int main(int argc, char *argv[]) {
 		DL_DELETE(u_data->o_head, o_node);
 		arbiter_delete_oiu(o_node);
 	}
+
+	DL_FOREACH_SAFE(u_data->r_head, r_node, r_temp) {
+		DL_DELETE(u_data->r_head, r_node);
+		arbiter_delete_riu(r_node);
+	}
+
 	arbiter_server_end(&aserver);
 
 	return 0;
