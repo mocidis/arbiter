@@ -53,7 +53,8 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
 
     int i, n;
     time_t timer;
-    char ip_addr[] = "udp:";
+    char ip_addr[50];
+    strncpy(ip_addr,"udp:", sizeof(char));
 
     arbiter_new_oiu(&oiu);
     arbiter_new_riu(&riu);
