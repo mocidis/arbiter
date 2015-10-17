@@ -115,7 +115,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                     DL_REPLACE_ELEM(udata->r_head, r_node, riu);
                 }
                 /////////////
-                for (i = 0; i < MAX_DEVICE; i++ ) 
+                for (i = 0; i < MAX_DEVICE; i++ ){
                     if (udata->rclient_data[i]->is_used == 0) {
                         strncpy(udata->rclient_data[i]->username, request->abt_up.username, sizeof(udata->rclient_data[i]->username));
                         strcat(ip_addr,request->abt_up.ip_addr);
@@ -125,6 +125,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                     }
                     if (0 == strcmp(udata->rclient_data[i]->username, request->abt_up.username))
                         break;
+                }
             }
             //SAVE TO LIST DONE
             // NOW SEND THE LIST TO OIUC ON MULTICAST
