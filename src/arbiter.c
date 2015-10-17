@@ -54,7 +54,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     int i, n;
     time_t timer;
     char ip_addr[50];
-    strncpy(ip_addr,"udp:", sizeof(char));
+    strncpy(ip_addr,"udp:", sizeof(ip_addr));
 
     arbiter_new_oiu(&oiu);
     arbiter_new_riu(&riu);
@@ -117,10 +117,10 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 /////////////
                 for (i = 0; i < MAX_DEVICE; i++ ) 
                     if (udata->rclient_data[i]->is_used == 0) {
-                        strncpy(udata->rclient_data[0]->username, request->abt_up.username, sizeof(udata->rclient_data[0]->username));
+                        strncpy(udata->rclient_data[i]->username, request->abt_up.username, sizeof(udata->rclient_data[i]->username));
                         strcat(ip_addr,request->abt_up.ip_addr);
-                        riu_client_open(udata->rclient_data[0]->rclient, ip_addr);
-                        udata->rclient_data[0]->is_used = 1;
+                        riu_client_open(udata->rclient_data[i]->rclient, ip_addr);
+                        udata->rclient_data[i]->is_used = 1;
                         break;
                     }
                     if (0 == strcmp(udata->rclient_data[i]->username, request->abt_up.username))
