@@ -1,4 +1,4 @@
-.PHONY: all clean gen-a gen-o
+.PHONY: all clean
 
 USERVER_DIR:=../userver
 PROTOCOLS_DIR:=../protocols
@@ -42,14 +42,17 @@ all: gen-a gen-o gen-r $(ARBITER_APP)
 gen-a: $(PROTOCOLS_DIR)/$(A_PROTOCOL)
 	mkdir -p gen
 	awk -f $(USERVER_DIR)/gen-tools/gen.awk $(PROTOCOLS_DIR)/$(A_PROTOCOL)
+	touch gen-a
 
 gen-o: $(PROTOCOLS_DIR)/$(O_PROTOCOL)
 	mkdir -p gen
 	awk -f $(USERVER_DIR)/gen-tools/gen.awk $(PROTOCOLS_DIR)/$(O_PROTOCOL)
+	touch gen-o
 
 gen-r: $(PROTOCOLS_DIR)/$(R_PROTOCOL)
 	mkdir -p gen
 	awk -f $(USERVER_DIR)/gen-tools/gen.awk $(PROTOCOLS_DIR)/$(R_PROTOCOL)
+	touch gen-r
 
 $(ARBITER_APP): $(COMMON_SRCS:.c=.o) $(GEN_A_SRCS:.c=.o) $(GEN_O_SRCS:.c=.o) $(GEN_R_SRCS:.c=.o) $(ARBITER_SRCS:.c=.o) $(NODES_SRCS:.c=.o) $(O_SRCS:.c=.o) 
 	gcc -o $@ $^ $(LIBS)
@@ -76,4 +79,4 @@ $(O_SRCS:.c=.o): %.o: $(O_DIR)/src/%.c
 	gcc -c -o $@ $< $(CFLAGS)
 
 clean:
-	rm -fr $(ARBITER_APP) *.o gen
+	rm -fr $(ARBITER_APP) *.o gen gen-a gen-o gen-r
