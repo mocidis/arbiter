@@ -54,8 +54,6 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
 
     int i, n;
     time_t timer;
-    char ip_addr[50];
-    strncpy(ip_addr,"udp:", sizeof(ip_addr));
 
     arbiter_new_oiu(&oiu);
     arbiter_new_riu(&riu);
@@ -68,7 +66,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 time(&timer);
                 oiu->recv_time = timer;
 
-                n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
+                n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.id);
                 oiu->id[n] = '\0';
                 strncpy(oiu->desc, request->abt_up.desc, sizeof(request->abt_up.desc));
 
@@ -90,20 +88,17 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 time(&timer);
                 riu->recv_time = timer;
 
-                strcpy(riu->id, request->abt_up.username);
+                strcpy(riu->id, request->abt_up.id);
                 strncpy(riu->location, request->abt_up.location, sizeof(request->abt_up.location));
                 strncpy(riu->desc, request->abt_up.desc, sizeof(request->abt_up.desc));
-                strncpy(riu->ip_addr, request->abt_up.ip_addr, sizeof(request->abt_up.ip_addr));
+                strncpy(riu->ip_addr, request->abt_up.conn_str, sizeof(request->abt_up.conn_str));
 
                 riu->is_online = request->abt_up.is_online;
                 riu->is_tx = request->abt_up.is_tx;
                 riu->is_sq = request->abt_up.is_sq;
                 riu->frequence = request->abt_up.frequence;
-                riu->port = request->abt_up.port;
+                riu->port = request->abt_up.radio_port;
                 riu->volume = request->abt_up.volume;
-                
-                strncpy(riu->multicast_ip, request->abt_up.multicast_ip, sizeof(request->abt_up.multicast_ip));
-                riu->stream_port = request->abt_up.stream_port;
 
                 LL_SEARCH(udata->r_head, r_node, riu, cmp_id_riu);
 
@@ -116,13 +111,12 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                 /////////////
                 for (i = 0; i < MAX_DEVICE; i++ ){
                     if (udata->rclient_data[i]->is_used == 0) {
-                        strncpy(udata->rclient_data[i]->username, request->abt_up.username, sizeof(udata->rclient_data[i]->username));
-                        strcat(ip_addr,request->abt_up.ip_addr);
-                        riu_client_open(udata->rclient_data[i]->rclient, ip_addr);
+                        strncpy(udata->rclient_data[i]->username, request->abt_up.id, sizeof(udata->rclient_data[i]->username));
+                        riu_client_open(udata->rclient_data[i]->rclient, request->abt_up.conn_str);
                         udata->rclient_data[i]->is_used = 1;
                         break;
                     }
-                    if (0 == strcmp(udata->rclient_data[i]->username, request->abt_up.username))
+                    if (0 == strcmp(udata->rclient_data[i]->username, request->abt_up.id))
                         break;
                 }
             }
