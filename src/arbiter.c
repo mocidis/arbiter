@@ -43,7 +43,7 @@ static void arbiter_delete_riu(riu_t *del) {
 }
 
 static int cmp_id_riu(riu_t *a, riu_t *b) {
-    return strcmp(a->id, b->id);
+    return ((a->port = b->port)&&strcmp(a->id, b->id));
 }
 
 static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
@@ -65,19 +65,16 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
         case ABT_UP:
             if (strcmp(request->abt_up.type, "OIU") == 0) {
                 oiu->type = OIU;
+                
+                time(&timer);
+                oiu->recv_time = timer;
 
                 n = snprintf(oiu->id, sizeof(oiu->id) - 1, "%s", request->abt_up.username);
                 oiu->id[n] = '\0';
-                strncpy(oiu->des, request->abt_up.des, sizeof(oiu->des));
+                strncpy(oiu->desc, request->abt_up.desc, sizeof(request->abt_up.desc));
 
-                if (request->abt_up.is_online == 1)
-                    oiu->is_online  = 1;
-                else {
-                    oiu->is_online = 0;
-                }
+                oiu->is_online  = request->abt_up.is_online;
 
-                time(&timer);
-                oiu->recv_time = timer;
 
                 LL_SEARCH(udata->o_head, o_node, oiu, cmp_id_oiu);
 
@@ -90,21 +87,24 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
             }
             else {
                 riu->type = RIU;
-                strcpy(riu->id, request->abt_up.username);
-                if (request->abt_up.is_online == 1)
-                    riu->is_online  = 1;
-                else {
-                    riu->is_online = 0;
-                }
 
                 time(&timer);
                 riu->recv_time = timer;
 
-                riu->frequence = request->abt_up.frequence;
+                strcpy(riu->id, request->abt_up.username);
+                strncpy(riu->location, request->abt_up.location, sizeof(request->abt_up.location));
+                strncpy(riu->desc, request->abt_up.desc, sizeof(request->abt_up.desc));
+                strncpy(riu->ip_addr, request->abt_up.ip_addr, sizeof(request->abt_up.ip_addr));
 
-                strncpy(riu->location, request->abt_up.location, sizeof(riu->location));
-                strncpy(riu->ports_status, request->abt_up.ports_status, sizeof(riu->ports_status));
-                strncpy(riu->des, request->abt_up.des, sizeof(riu->des));
+                riu->is_online = request->abt_up.is_online;
+                riu->is_tx = request->abt_up.is_tx;
+                riu->is_sq = request->abt_up.is_sq;
+                riu->frequence = request->abt_up.frequence;
+                riu->port = request->abt_up.port;
+                riu->volume = request->abt_up.volume;
+                
+                strncpy(riu->multicast_ip, request->abt_up.multicast_ip, sizeof(request->abt_up.multicast_ip));
+                riu->stream_port = request->abt_up.stream_port;
 
                 LL_SEARCH(udata->r_head, r_node, riu, cmp_id_riu);
 
@@ -132,26 +132,41 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
             // (MOVED INTO ARBITER-FUNC.C)
             break;
         case ABT_PTT:
-            req.msg_id = RIUC_PTT;
-            strncpy(req.riuc_ptt.cmd_ptt, request->abt_ptt.cmd_ptt, sizeof(req.riuc_ptt.cmd_ptt));
-            char *list = strdup(request->abt_ptt.list);
-            char *device, *port;
-            while (list != NULL) {
-                device = strsep(&list, ":");
-                port = strchr(device, '_');
-                *port='\0';
-                port++;
-               // puts(device);
-               // puts(port);;
-                strncpy(req.riuc_ptt.port_ptt, port, sizeof(req.riuc_ptt.port_ptt));
-                for (i = 0; i < MAX_DEVICE; i++) {
-                    //printf("username = %s, id = %d\n", udata->rclient_data[i]->username, i);
-                    if (0 == strcmp(udata->rclient_data[i]->username, device)) {
-                        riu_client_send(udata->rclient_data[i]->rclient, &req);
+        /*
+            if (0 == strcmp(request->abt_ptt.type, "OIU")) {
+                req.msg_id = RIUC_PTT;
+
+                strncpy(req.riuc_ptt.cmd_ptt, request->abt_ptt.cmd_ptt, sizeof(req.riuc_ptt.cmd_ptt));
+                char *list = strdup(request->abt_ptt.list);
+                char *device, *port;
+                while (list != NULL) {
+                    device = strsep(&list, ":");
+                    port = strchr(device, '_');
+                    *port='\0';
+                    port++;
+                    // puts(device);
+                    // puts(port);;
+                    strncpy(req.riuc_ptt.port_ptt, port, sizeof(req.riuc_ptt.port_ptt));
+                    for (i = 0; i < MAX_DEVICE; i++) {
+                        //printf("username = %s, id = %d\n", udata->rclient_data[i]->username, i);
+                        if (0 == strcmp(udata->rclient_data[i]->username, device)) {
+                            riu_client_send(udata->rclient_data[i]->rclient, &req);
+                        }
                     }
                 }
             }
+            else if (0 == strcmp(request->abt_ptt.type, "RIU")){
+                req.msg_id = OIUC_PTT;
+
+                req.oiuc_ptt.ptt_on = request->abt_up.ptt_on;
+                strncpy(req.oiuc_ptt.ptt_name, request->abt_ptt.ptt_name, sizeof(request->abt_ptt.ptt_name));
+                strncpy(req.oiuc_ptt.sdp_ip, request->abt_up.sdp_ip, sizeof(request->abt_up.sdp_ip));
+                req.oiuc_ptt.sdp_port = request->abt_up.sdp_port;
+
+                oiu_client_send(udata->oclient, &req);
+            }
             break;
+        */
         default:
             printf("Unknow request. Exit now\n");
             exit(-1);
