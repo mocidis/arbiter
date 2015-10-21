@@ -23,10 +23,11 @@ O_DIR:=../ansi-opool
 O_SRCS:=object-pool.c
 
 CFLAGS:=-std=c99 -fms-extensions -Wall -I$(ARBITER_DIR)/include -I$(COMMON_DIR)/include -I$(USERVER_DIR)/include 
-CFLAGS += -I../json-c/output/include/json-c
-CFLAGS += -I$(NODES_DIR)/include -I$(LIBUT_DIR)/include
-CFLAGS += -I$(GEN_DIR) -I$(O_DIR)/include
-CFLAGS += -D_GNU_SOURCE
+CFLAGS+=-I../json-c/output/include/json-c
+CFLAGS+=-I$(NODES_DIR)/include -I$(LIBUT_DIR)/include
+CFLAGS+=-I$(GEN_DIR) -I$(O_DIR)/include
+CFLAGS+=-I$(PROTOCOLS_DIR)/include
+CFLAGS+=-D_GNU_SOURCE
 
 LIBS:=../json-c/output/lib/libjson-c.a -lpthread
 

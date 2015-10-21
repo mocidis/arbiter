@@ -9,6 +9,8 @@
 
 #include "time.h"
 
+#include "ics-proto.h"
+
 void *oiu_server_proc(void *param) {
     arbiter_server_t *aserver = (arbiter_server_t *)param;
     arbiter_data_t *udata = (arbiter_data_t *)aserver->user_data;
@@ -28,7 +30,8 @@ void *oiu_server_proc(void *param) {
             DL_FOREACH_SAFE(udata->o_head, o_node, o_temp) {
                 areq.msg_id = OIUC_GB;
 
-                strncpy(areq.oiuc_gb.type, "OIUC", sizeof("OIUC"));
+                areq.oiuc_gb.type = DT_OIUC;
+
                 strncpy(areq.oiuc_gb.id, o_node->id, sizeof(o_node->id));
                 strncpy(areq.oiuc_gb.des, o_node->desc, sizeof(o_node->desc));
                 
@@ -47,7 +50,7 @@ void *oiu_server_proc(void *param) {
             DL_FOREACH_SAFE(udata->r_head, r_node, r_temp) {
                 areq.msg_id = OIUC_GB;
 
-                strncpy(areq.oiuc_gb.type, "RIUC", sizeof("RIUC"));
+                areq.oiuc_gb.type = DT_RIUC;
                 
                 strncpy(areq.oiuc_gb.id, r_node->id, sizeof(r_node->id));
                 strncpy(areq.oiuc_gb.location, r_node->location, sizeof(r_node->location));

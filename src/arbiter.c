@@ -14,6 +14,7 @@
 #include "arbiter-server.h"
 #include "oiu-client.h"
 #include "riu-client.h"
+#include "ics-proto.h"
 
 static void usage(char *app) {
     printf("Usage: %s <answer-conn-string> <listen-conn-string>\n", app);
@@ -43,7 +44,7 @@ static void arbiter_delete_riu(riu_t *del) {
 }
 
 static int cmp_id_riu(riu_t *a, riu_t *b) {
-    return ((a->port = b->port)&&strcmp(a->id, b->id));
+    return (strcmp(a->id, b->id));
 }
 
 static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
@@ -59,11 +60,9 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
     arbiter_new_oiu(&oiu);
     arbiter_new_riu(&riu);
 
-    riu_request_t req;
-
     switch(request->msg_id) {
         case ABT_UP:
-            if (strcmp(request->abt_up.type, "OIU") == 0) {
+            if (request->abt_up.type == DT_OIUC) {
                 oiu->type = OIU;
                 
                 time(&timer);
@@ -85,7 +84,7 @@ static void on_request(arbiter_server_t *aserver, arbiter_request_t *request) {
                     DL_REPLACE_ELEM(udata->o_head, o_node, oiu);
                 }
             }
-            else {
+            else if(request->abt_up.type == DT_RIUC) {
                 riu->type = RIU;
 
                 time(&timer);
